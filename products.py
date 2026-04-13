@@ -55,9 +55,14 @@ class Product:
         """Deactivate the product."""
         self.active = False
 
-    def show(self):
-        """Print a string representation of the product."""
-        print(f"{self.name}, Price: {self.price}, Quantity: {self.quantity}")
+    def show(self) -> str:
+        """
+        Return a string representation of the product.
+
+        Returns:
+            Formatted string with product details
+        """
+        return f"{self.name}, Price: ${self.price}, Quantity: {self.quantity}"
 
     def buy(self, quantity: int) -> float:
         """
@@ -84,8 +89,99 @@ class Product:
         return total_price
 
 
+class NonStockedProduct(Product):
+    """
+    Represents a non-physical product (e.g., software license).
+
+    Quantity is always 0 and the product always stays active.
+    """
+
+    def __init__(self, name: str, price: float):
+        """
+        Initialize a non-stocked product.
+
+        Args:
+            name: Product name
+            price: Product price
+        """
+        super().__init__(name, price, quantity=0)
+        self.active = True
+
+    def set_quantity(self, quantity: int):
+        """Quantity always stays at 0 for non-stocked products."""
+        self.quantity = 0
+
+    def buy(self, quantity: int) -> float:
+        """
+        Buy a given quantity of the non-stocked product.
+
+        Args:
+            quantity: Number of items to purchase
+
+        Returns:
+            Total price of the purchase
+
+        Raises:
+            ValueError: If quantity is not positive
+        """
+        if quantity <= 0:
+            raise ValueError("Purchase quantity must be positive")
+        return self.price * quantity
+
+    def show(self) -> str:
+        """Return a string representation of the non-stocked product."""
+        return f"{self.name}, Price: ${self.price}, Quantity: Unlimited"
+
+
+class LimitedProduct(Product):
+    """
+    Represents a product with a maximum purchase limit per order.
+
+    For example, a shipping fee that can only be added once.
+    """
+
+    def __init__(self, name: str, price: float, quantity: int, maximum: int):
+        """
+        Initialize a limited product.
+
+        Args:
+            name: Product name
+            price: Product price
+            quantity: Initial quantity in stock
+            maximum: Maximum quantity allowed per order
+        """
+        super().__init__(name, price, quantity)
+        self.maximum = maximum
+
+    def buy(self, quantity: int) -> float:
+        """
+        Buy a given quantity of the limited product.
+
+        Args:
+            quantity: Number of items to purchase
+
+        Returns:
+            Total price of the purchase
+
+        Raises:
+            ValueError: If quantity exceeds maximum allowed or available stock
+        """
+        if quantity > self.maximum:
+            raise ValueError(
+                f"Cannot order more than {self.maximum} of '{self.name}' per order"
+            )
+        return super().buy(quantity)
+
+    def show(self) -> str:
+        """Return a string representation of the limited product."""
+        return (
+            f"{self.name}, Price: ${self.price}, Quantity: {self.quantity}, "
+            f"Limited to {self.maximum} per order!"
+        )
+
+
 def main():
-    """Test the Product class."""
+    """Test the Product classes."""
     bose = Product("Bose QuietComfort Earbuds", price=250, quantity=500)
     mac = Product("MacBook Air M2", price=1450, quantity=100)
 
