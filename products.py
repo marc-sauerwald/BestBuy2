@@ -27,6 +27,20 @@ class Product:
         self.price = price
         self.quantity = quantity
         self.active = True
+        self.promotion = None
+
+    def get_promotion(self):
+        """Get the current promotion."""
+        return self.promotion
+
+    def set_promotion(self, promotion):
+        """
+        Set a promotion for this product.
+
+        Args:
+            promotion: Promotion instance or None to remove promotion
+        """
+        self.promotion = promotion
 
     def get_quantity(self) -> int:
         """Return the current quantity in stock."""
@@ -62,7 +76,10 @@ class Product:
         Returns:
             Formatted string with product details
         """
-        return f"{self.name}, Price: ${self.price}, Quantity: {self.quantity}"
+        promo_text = ""
+        if self.promotion:
+            promo_text = f", Promotion: {self.promotion.name}"
+        return f"{self.name}, Price: ${self.price}, Quantity: {self.quantity}{promo_text}"
 
     def buy(self, quantity: int) -> float:
         """
@@ -84,7 +101,11 @@ class Product:
         if not self.active:
             raise ValueError("Product is not active")
 
-        total_price = self.price * quantity
+        if self.promotion:
+            total_price = self.promotion.apply_promotion(self.price, quantity)
+        else:
+            total_price = self.price * quantity
+
         self.set_quantity(self.quantity - quantity)
         return total_price
 
@@ -126,11 +147,17 @@ class NonStockedProduct(Product):
         """
         if quantity <= 0:
             raise ValueError("Purchase quantity must be positive")
+
+        if self.promotion:
+            return self.promotion.apply_promotion(self.price, quantity)
         return self.price * quantity
 
     def show(self) -> str:
         """Return a string representation of the non-stocked product."""
-        return f"{self.name}, Price: ${self.price}, Quantity: Unlimited"
+        promo_text = ""
+        if self.promotion:
+            promo_text = f", Promotion: {self.promotion.name}"
+        return f"{self.name}, Price: ${self.price}, Quantity: Unlimited{promo_text}"
 
 
 class LimitedProduct(Product):
@@ -174,9 +201,12 @@ class LimitedProduct(Product):
 
     def show(self) -> str:
         """Return a string representation of the limited product."""
+        promo_text = ""
+        if self.promotion:
+            promo_text = f", Promotion: {self.promotion.name}"
         return (
             f"{self.name}, Price: ${self.price}, Quantity: {self.quantity}, "
-            f"Limited to {self.maximum} per order!"
+            f"Limited to {self.maximum} per order!{promo_text}"
         )
 
 
