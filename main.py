@@ -1,5 +1,6 @@
 """Main module for the Best Buy store application."""
 import products
+import promotions
 import store
 
 
@@ -8,7 +9,7 @@ def list_all_products(best_buy):
     print("\n------")
     all_products = best_buy.get_all_products()
     for i, product in enumerate(all_products, 1):
-        print(f"{i}. {product.name}, Price: ${product.price}, Quantity: {product.get_quantity()}")
+        print(f"{i}. {product.show()}")
     print("------")
 
 
@@ -25,7 +26,7 @@ def make_order(best_buy):
 
     # Display products
     for i, product in enumerate(all_products, 1):
-        print(f"{i}. {product.name}, Price: ${product.price}, Quantity: {product.get_quantity()}")
+        print(f"{i}. {product.show()}")
     print("------")
 
     print("When you want to finish order, enter empty text.")
@@ -39,25 +40,32 @@ def make_order(best_buy):
         if product_input == "":
             break
 
+        # Validate product number
         try:
             product_num = int(product_input)
-            if product_num < 1 or product_num > len(all_products):
-                print("Error adding product!")
-                continue
-
-            quantity_input = input("What amount do you want? ")
-            quantity = int(quantity_input)
-
-            if quantity <= 0:
-                print("Error adding product!")
-                continue
-
-            selected_product = all_products[product_num - 1]
-            shopping_list.append((selected_product, quantity))
-            print("Product added to list!")
-
         except ValueError:
-            print("Error adding product!")
+            print(f"Error: Please enter a number between 1 and {len(all_products)}.")
+            continue
+
+        if product_num < 1 or product_num > len(all_products):
+            print(f"Error: Please enter a number between 1 and {len(all_products)}.")
+            continue
+
+        # Validate quantity
+        quantity_input = input("What amount do you want? ")
+        try:
+            quantity = int(quantity_input)
+        except ValueError:
+            print("Error: Please enter a valid number for quantity.")
+            continue
+
+        if quantity <= 0:
+            print("Error: Quantity must be at least 1.")
+            continue
+
+        selected_product = all_products[product_num - 1]
+        shopping_list.append((selected_product, quantity))
+        print("Product added to list!")
 
     # Process the order if there are items
     if shopping_list:
@@ -100,7 +108,7 @@ def start(best_buy):
             break
 
         else:
-            print("Invalid choice. Please try again.")
+            print("Error: Please enter a number between 1 and 4.")
 
 
 def main():
@@ -109,8 +117,21 @@ def main():
     product_list = [
         products.Product("MacBook Air M2", price=1450, quantity=100),
         products.Product("Bose QuietComfort Earbuds", price=250, quantity=500),
-        products.Product("Google Pixel 7", price=500, quantity=250)
+        products.Product("Google Pixel 7", price=500, quantity=250),
+        products.NonStockedProduct("Windows License", price=125),
+        products.LimitedProduct("Shipping", price=10, quantity=250, maximum=1)
     ]
+
+    # Create promotion catalog
+    second_half_price = promotions.SecondHalfPrice("Second Half price!")
+    third_one_free = promotions.ThirdOneFree("Third One Free!")
+    thirty_percent = promotions.PercentDiscount("30% off!", percent=30)
+
+    # Add promotions to products
+    product_list[0].set_promotion(second_half_price)
+    product_list[1].set_promotion(third_one_free)
+    product_list[3].set_promotion(thirty_percent)
+
     best_buy = store.Store(product_list)
 
     # Start the user interface
